@@ -36,7 +36,12 @@ emdash({
    - **Resend API key** (stored encrypted, never shown again)
    - **From email** (on your verified domain)
    - **From name** and **Reply-to email** (optional)
+   - **Email wordmark**, **brand colour** and **accent colour** (optional, colours as `#rrggbb`)
 4. Select this plugin under **Settings → Email** and press **Send test email**.
+
+## Branded layout
+
+Every message is sent with a branded HTML layout built from its plain-text body: a coloured header with your wordmark, the subject as the heading, paragraphs, and any link on its own line as a button (labelled from the sender's own HTML when it has one). The plain-text part is sent unchanged. Colours that are not `#rrggbb` are ignored. Without settings you get a near-black header and the From name as the wordmark.
 
 ## Trust model
 

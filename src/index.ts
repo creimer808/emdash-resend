@@ -1,9 +1,10 @@
 import { definePlugin } from "emdash";
 import type { PluginContext, PluginDescriptor } from "emdash";
 import type { EmailDeliverEvent } from "emdash/plugin";
+import { isHexColor, renderBrandedEmail } from "./template";
 
 const PLUGIN_ID = "resend-email";
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 const ENTRYPOINT = "emdash-resend";
 const RESEND_API_URL = "https://api.resend.com/emails";
 const CAPABILITIES = ["hooks.email-transport:register", "network:request"] as const;
@@ -54,9 +55,19 @@ export function createResendDeliver(): (
 		}
 		const fromName = await ctx.settings.get<string>("fromName");
 		const configuredReplyTo = await ctx.settings.get<string>("replyTo");
+		const brandName = await ctx.settings.get<string>("brandName");
+		const brandColor = await ctx.settings.get<string>("brandColor");
+		const accentColor = await ctx.settings.get<string>("accentColor");
 
 		// A per-message reply-to (set by a plugin) wins over the configured one.
 		const replyTo = message.replyTo ?? (isValidEmail(configuredReplyTo) ? configuredReplyTo : undefined);
+
+		// Every message gets the branded layout, built from its plain-text body.
+		const html = renderBrandedEmail(message, {
+			name: brandName?.trim() || fromName?.trim() || fromEmail.split("@")[1],
+			color: isHexColor(brandColor) ? brandColor : null,
+			accent: isHexColor(accentColor) ? accentColor : null,
+		});
 
 		const response = await ctx.http.fetch(RESEND_API_URL, {
 			method: "POST",
@@ -71,7 +82,7 @@ export function createResendDeliver(): (
 				...(replyTo ? { reply_to: replyTo } : {}),
 				subject: message.subject,
 				text: message.text,
-				...(message.html ? { html: message.html } : {}),
+				html,
 			}),
 		});
 
@@ -125,6 +136,21 @@ export function createPlugin() {
 					type: "email",
 					label: "Reply-to email",
 					description: "Optional. Replies go here instead of the From address.",
+				},
+				brandName: {
+					type: "string",
+					label: "Email wordmark",
+					description: "Optional. Name shown in the email header. Defaults to the From name.",
+				},
+				brandColor: {
+					type: "string",
+					label: "Email brand colour",
+					description: "Optional. Header and button colour as #rrggbb, e.g. #13274a. Defaults to near-black.",
+				},
+				accentColor: {
+					type: "string",
+					label: "Email accent colour",
+					description: "Optional. Thin rule under the header as #rrggbb, e.g. #d4a62a. Defaults to the brand colour.",
 				},
 			},
 		},

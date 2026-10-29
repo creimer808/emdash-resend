@@ -1,6 +1,6 @@
 {
 	"name": "emdash-resend",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Resend email provider for EmDash CMS, configured from the admin settings page.",
 	"type": "module",
 	"main": "./dist/index.mjs",
